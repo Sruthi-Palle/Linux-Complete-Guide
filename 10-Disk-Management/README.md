@@ -7,7 +7,10 @@
 Before adding storage, administrators must identify where space is being consumed.
 
 - `df -h`: Displays disk utilization across all **mounted** file systems in human-readable format (GB/MB).
+  - ![alt text](../Images/df-h.png)
 - `du -sh [folder]`: Summarizes the disk usage of a specific directory, helping locate specific "space-hogging" log files. You can also find the size of a directory:
+
+- ![alt text](../Images/lsblk.png)
 
 ## Storage Integration Workflow **_WITHOUT_** new disk Partition
 
@@ -16,10 +19,14 @@ Best for simple storage expansion where the entire volume is used for one purpos
 **1) Creation and Attachment of volume to existing EC2 instance:**
 
 - **Provision:** Create an EBS volume in the **same Availability Zone** as your EC2 instance.
-- **Attach:** Use the AWS Console to attach the volume(block storage) to your instance.
-- **Verify:** Run `lsblk` to see the new block device.
+  - ![alt text](../Images/create-volume.png)
 
-  > _Note: It may appear as_ `/dev/xvdf` _on older instances or_ `/dev/nvme1n1` _on newer ones._
+- **Attach:** Use the AWS Console to attach the volume(block storage) to your instance.
+  - ![alt text](../Images/attach-volume.png)
+  - ![alt text](../Images/attach-volume-1.png)
+- **Verify:** Run `lsblk` to see the new block device.
+  - ![alt text](../Images/lsblk-with-new-volume.png)
+    > _Note: It may appear as_ `/dev/xvdf` _on older instances or_ `/dev/nvme1n1` _on newer ones._
 
 **2) Formatting:** Raw block storage cannot be used directly by applications. It must be formatted with a file system (like **ext4** or **xfs**) before use.
 
@@ -33,12 +40,14 @@ Best for simple storage expansion where the entire volume is used for one purpos
 - **Create Mount Point:** `sudo mkdir -p /mnt/data_volume`
 - **Mount:** `sudo mount /dev/xvdf /mnt/data_volume`
 - **Verify:** Run `df -h` to confirm the new space is listed and accessible.
+  - ![alt text](../Images/mount.png)
+  - ![alt text](../Images/lsblk-after-mount.png)
 
 #### 4) Ensuring Persistence (The "Reboot" Step)
 
 By default, manual mounts disappear after a reboot. To make them permanent:
 
-1.  Find the UUID of your drive: `sudo blkid`
+1.  Find the UUID of your drive: `sudo blkid /dev/xvdf`
 2.  Add an entry to the `/etc/fstab` file: `UUID=your-uuid-here /mnt/data_volume ext4 defaults,nofail 0 2`
 
 ## Storage Integration Workflow **_WITH_** new disk Partition
